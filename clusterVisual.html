@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clustring Visualization</title>
+</head>
+<body>
+    <header><h1 id="head1" style="color: blueviolet; text-align: center;"> Visualization </h1></header>
+    <br>
+
+    <canvas id="canvas" style="border: 2px solid salmon;">something Gone Wrong</canvas>
+
+    <script>
+        const canva = document.getElementById("canvas");
+const context = canva.getContext('2d');
+let coords = [];
+
+const width = window.innerWidth-20;
+const height = window.innerHeight-200;
+const diagonal = Math.sqrt(Math.pow(width,2)+Math.pow(height,2));
+
+canva.width = width;
+canva.height=height;
+///////////////////////////////////////////////////////////////////////////////////
+const graphics={
+    drawDot(x, y, r, color = "#0a0a0a") {
+        context.beginPath();
+        context.arc(x, y, r, 0, Math.PI * 2);
+        context.fillStyle = color;
+        context.fill();
+        context.closePath();
+    },
+    
+    drawLine(start, end, color = "#cd8080") {
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        context.lineTo(end.x, end.y);
+        context.strokeStyle=color;
+        context.lineWidth=2;
+        context.stroke();
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+function generateDots(density, size) {
+    for (let i = 0; i < density; i++) {
+        const x = Math.random() * canva.width;
+        const y = Math.random() * canva.height;
+        const color = `rgb(${Math.floor(Math.random() * 220)-50}, ${Math.floor(Math.random() * 220)-50}, ${Math.floor(Math.random() * 220)-50})`;
+        const id = `dot-${i}`;
+
+        graphics.drawDot(x, y, size, color);
+        coords.push({ id, x, y, size, color });
+    }
+}
+
+function changeColor(id, newColor) {
+    const dot = coords.find(d => d.id === id);
+
+    if (dot) {
+        const r = dot.size;
+        // Clear the old dot (optional)
+        context.clearRect(dot.x - r, dot.y - r, 2 * r, 2 * r);
+        
+        // Draw the dot with the new color
+        graphics.drawDot(dot.x, dot.y, r, newColor);
+    }
+}
+
+// Generate 100 dots with a radius of 5
+generateDots(diagonal/50, 5);
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+let edges=[];
+let clusters=[];
+const hierarchicalClustring = {
+    dist(start,end){
+        return Math.sqrt(Math.pow(start.x-end.x,2) + Math.pow(start.y-end.y,2));
+    },
+
+    edgeDist(){
+        let smallest=1000;
+        for (let i=0; i<coords.length; i++){
+            for (let j=i+1; j<coords.length; j++){
+                // smallest=Math.min(smallest, dist(coords[i],coords[j]))
+                setInterval(() => {
+                    if (this.dist(coords[i],coords[j]) < diagonal/5){
+                        graphics.drawLine(coords[i], coords[j]);
+                    }
+                }, 1000);
+                
+                edges.push({source:coords[i], destination:coords[j], dist:this.dist(coords[i],coords[j])});
+            }
+        }
+    },
+
+    getEdges() {
+        return edges;
+    }
+};
+
+hierarchicalClustring.edgeDist();
+console.log(hierarchicalClustring.getEdges());
+    </script>
+</body>
+</html>
